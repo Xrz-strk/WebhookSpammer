@@ -236,7 +236,7 @@
             log(` Message ${i + 1}/${count} sent successfully.`);
           }
 
-          await new Promise((r) => setTimeout(r, 500)); // wait 1s between sends
+          await new Promise((r) => setTimeout(r, 400)); // wait 1s between sends
         } catch (error) {
           log(` Failed to send message: ${error.message}`);
           break;
