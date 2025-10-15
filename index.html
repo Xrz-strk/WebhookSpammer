@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HRVX Webhook Spammer — TTS Edition</title>
+  <style>
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background-color: #1b1b2f;
+      color: #fff;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .container {
+      background: rgba(42, 42, 64, 0.95);
+      padding: 30px;
+      border-radius: 20px;
+      width: 400px;
+      box-shadow: 0 0 25px rgba(0, 255, 198, 0.15);
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+
+    .container h1 {
+      font-size: 1.6em;
+      color: #00ffc6;
+      text-shadow: 0 0 8px rgba(0, 255, 198, 0.6);
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .input-group label {
+      font-size: 0.9em;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #2e2e4a;
+      color: #fff;
+      font-size: 1em;
+      outline: none;
+    }
+
+    .input-group textarea {
+      resize: none;
+      height: 80px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 5px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    #send {
+      background-color: #00ffc6;
+      color: #1b1b2f;
+    }
+    #send:hover {
+      background-color: #00dba6;
+    }
+
+    #stop {
+      background-color: #ff4b4b;
+      color: white;
+    }
+    #stop:hover {
+      background-color: #d63b3b;
+    }
+
+    button:disabled {
+      background-color: #777;
+      cursor: not-allowed;
+    }
+
+    #log {
+      margin-top: 15px;
+      font-size: 0.9em;
+      color: #ccc;
+      text-align: left;
+      max-height: 100px;
+      overflow-y: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 10px;
+    }
+
+    /* Top-right Discord server link */
+    .server-link {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      z-index: 100;
+    }
+
+    .server-link a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 8px 14px;
+      border-radius: 12px;
+      color: #00ffc6;
+      font-weight: bold;
+      font-size: 0.9em;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(0, 255, 198, 0.2);
+    }
+
+    .server-link a:hover {
+      background: rgba(0, 255, 198, 0.15);
+      box-shadow: 0 0 15px rgba(0, 255, 198, 0.4);
+      transform: scale(1.05);
+    }
+
+    .server-link img {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="server-link">
+    <a href="https://discord.gg/V6DfuZYUBD" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/5968/5968756.png" alt="Discord Icon" />
+      <span>HRVX Server</span>
+    </a>
+  </div>
+
+  <!-- Main UI -->
+  <div class="container">
+    <h1>HRVX Webhook Spammer — TTS Edition</h1>
+
+    <div class="input-group">
+      <label for="webhook">Webhook URL</label>
+      <input type="url" id="webhook" placeholder="Enter your webhook URL" />
+    </div>
+
+    <div class="input-group">
+      <label for="message">Message</label>
+      <textarea id="message" placeholder="Type your message here..."></textarea>
+    </div>
+
+    <div class="input-group">
+      <label for="count">Repeat Count</label>
+      <input type="number" id="count" min="1" max="100" value="1" />
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="tts" />
+      <label for="tts">Enable TTS message</label>
+    </div>
+
+    <button id="send">SEND</button>
+    <button id="stop" disabled>STOP</button>
+
+    <div id="log"></div>
+  </div>
+
+  <script>
+    const sendButton = document.getElementById("send");
+    const stopButton = document.getElementById("stop");
+    const logBox = document.getElementById("log");
+    let isSending = false;
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+      logBox.innerHTML += `[${time}] ${message}<br>`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    sendButton.addEventListener("click", async () => {
+      const webhookURL = document.getElementById("webhook").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const count = parseInt(document.getElementById("count").value, 10);
+      const tts = document.getElementById("tts").checked;
+
+      if (!webhookURL || !message || count <= 0) {
+        alert("Please fill out all fields correctly.");
+        return;
+      }
+
+      isSending = true;
+      sendButton.disabled = true;
+      stopButton.disabled = false;
+      sendButton.textContent = "Sending...";
+
+      log(`Starting to send ${count} message(s)...`);
+
+      for (let i = 0; i < count; i++) {
+        if (!isSending) {
+          log("Stopped by user.");
+          break;
+        }
+
+        try {
+          const response = await fetch(webhookURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: message, tts })
+          });
+
+          if (!response.ok) {
+            log(` Error on message ${i + 1}: ${response.statusText}`);
+          } else {
+            log(` Message ${i + 1}/${count} sent successfully.`);
+          }
+
+          await new Promise((r) => setTimeout(r, 1000)); // wait 1s between sends
+        } catch (error) {
+          log(` Failed to send message: ${error.message}`);
+          break;
+        }
+      }
+
+      isSending = false;
+      sendButton.disabled = false;
+      stopButton.disabled = true;
+      sendButton.textContent = "SEND";
+      log("Process finished.");
+    });
+
+    stopButton.addEventListener("click", () => {
+      isSending = false;
+      stopButton.disabled = true;
+      sendButton.disabled = false;
+      sendButton.textContent = "SEND";
+      log("Stopping current process...");
+    });
+  </script>
+</body>
+</html>
